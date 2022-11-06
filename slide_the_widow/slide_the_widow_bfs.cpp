@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 
 //#define endl '\n'
-//#define int long long
+#define int short
 #define pb push_back
 #define ff first
 #define ss second
@@ -12,33 +12,23 @@
 #define vll vector<ll>
 #define vii vector<ii>
  
-const int INF = 0x3f3f3f3f;
-const ll  LINF = 0x3f3f3f3f3f3f3f3fLL;
-const int maxn = 2e5+10;
-const int mod = 1e9+7;
+// const int INF = 0x3f3f3f3f;
+// const ll  LINF = 0x3f3f3f3f3f3f3f3fLL;
+// const int maxn = 2e5+10;
+// const int mod = 1e9+7;
  
 using namespace std;
 
 typedef struct _ {
 
-  // era pra ser uma heuristica pra tentar achar a solução mais rápido com um "dijkstra" mas ficou pior doq a bfs normal
-  int sum_of_dists;
   string path;
   vector<vi> curr_grid;
   ii zero_position;
 
-  _(int s, string p, vector<vi> cg, ii zp) {
-    sum_of_dists = s;
+  _(string p, vector<vi> cg, ii zp) {
     path = p;
     curr_grid = cg;
     zero_position = zp;
-  }
-
-  bool operator < (struct _ p) const {
-    if(p.sum_of_dists != sum_of_dists){
-      return sum_of_dists < p.sum_of_dists;
-    }
-    return path.size() < p.path.size();
   }
 
 }solver;
@@ -47,7 +37,7 @@ int n, m;
 
 vector<vi> vs;
 
-map<vector<vi>, int> vis;
+map<vector<vi>, bool> vis;
 
 int dx[] = {-1, 1, 0, 0};
 int dy[] = {0, 0, -1, 1};
@@ -57,44 +47,35 @@ bool is_inside_matrix(int x,int y){
   return x>=0&&x<n&&y>=0&&y<m;
 }
 
-ii get_final_coordinate_of_value(int value){
-  return { value / m, value % m};
-}
-
-int get_distance_from_final_pos(ii curr_pos, ii final_pos){
-  return abs(curr_pos.ff - final_pos.ff) + abs(curr_pos.ss - final_pos.ss);
-}
-
-int get_sum_of_dists(vector<vi> &vec = vs){
-
-  int s = 0;
+bool finish(solver s){
+  bool its_over = true;
 
   for(int i=0;i<n;++i){
     for(int j=0;j<m;++j){
-      s += get_distance_from_final_pos({i, j}, get_final_coordinate_of_value(vec[i][j]));
+      if(s.curr_grid[i][j] != (i*m) + j) {
+        its_over = false;
+      }
     }
   }
 
-  return s;
+  return its_over;
 }
 
 void solve(ii start){
 
-  queue<solver> pq;
+  queue<solver> q;
 
-  int d = get_sum_of_dists();
+  q.push(solver("", vs, start));
 
-  pq.push(solver(d, "", vs, start));
+  while(!q.empty()) {
 
-  while(!pq.empty()) {
+    solver s = q.front();
 
-    solver s = pq.front();
+    q.pop();
 
-    pq.pop();
-
-    if(s.sum_of_dists == 0) {
-      cout << "found: " << s.path << endl;
-      continue;
+    if(finish(s)) {
+      cout << "found: " << s.path << " " << s.path.size() << endl;
+      break;
     }
 
     vis[s.curr_grid] = 1;
@@ -105,7 +86,7 @@ void solve(ii start){
       if(is_inside_matrix(nx, ny)){
         swap(s.curr_grid[x][y], s.curr_grid[nx][ny]);
         if(!vis[s.curr_grid]){
-          pq.push(solver(get_sum_of_dists(s.curr_grid), s.path + dir[i], s.curr_grid, {nx,ny}));
+          q.push(solver(s.path + dir[i], s.curr_grid, {nx,ny}));
         }
         swap(s.curr_grid[x][y], s.curr_grid[nx][ny]);
       }
